@@ -1,43 +1,91 @@
 #! /bin/bash
 
-# list /opt/libcbench/glibc
-available_versions=$(ls /opt/libcbench/glibc)
+avai_vers=$(ls /opt/libcbench/glibc)
+help_str="\
+Usage: libcbench [--log] <executable_path>
+       libcbench -l | -h
+Arguments:
+    -l: list available glibc versions
+    -h: print this help message
+    --log: log the output of the executable
+"
 
 # if no arguments are passed, print usage
 if [ -z "$1" ]; then
-    echo "Usage: libcbench executable_path"
-    echo "Available versions are:"
-    echo $available_versions
+    echo "${help_str}"
     exit 0
 fi
 
-# make a copy of the executable
-cp ${1} ${1}.libcbench
-exe_path=$(realpath ${1}.libcbench)
+# if -l is passed, list available glibc versions
+if [ "$1" == "-l" ]; then
+    echo "Available versions are:"
+    echo ${avai_vers}
+    exit 0
+fi
 
-# create log file
-log_file=libcbench_$(date +%Y%m%d_%H%M%S).log
-touch ${log_file}
+# if -h is passed, print usage
+if [ "$1" == "-h" ]; then
+    echo "${help_str}"
+    exit 0
+fi
+
+# if --log is passed, log the output of the executable
+log_flag=0
+if [ "$1" == "--log" ]; then
+    shift
+    log_flag=1
+fi
+
+# make a copy of the executable
+exe_name=${1}
+cp ${exe_name} ${exe_name}.libcbench
+exe_path=$(realpath ${exe_name}.libcbench)
+
+if [ $log_flag -eq 1 ]; then
+    # create log file
+    log_file=libcbench_$(date +%Y%m%d_%H%M%S).log
+    touch ${log_file}
+fi
 
 # for each version, run `libcset executable_path version` and then run the executable
-for version in $available_versions; do
+for version in $avai_vers; do
     /opt/libcbench/libcset ${exe_path} ${version}
 
+    # print start running message
     now=$(date +%T\ %N)
-    echo -e "\033[33m[$now] Running ${1} using glibc ${version}\033[0m" | tee -a ${log_file}
+    echo -e "\033[33m[$now] Running ${exe_name} using glibc ${version}\033[0m"
+    if [ $log_flag -eq 1 ]; then
+        echo -e "[$now] Running ${exe_name} using glibc ${version}" >>${log_file}
+    fi
 
-    ${exe_path} 2>&1 | tee -a ${log_file}
+    # run the executable
+    if [ $log_flag -eq 1 ]; then
+        ${exe_path} 2>&1 | tee -a ${log_file}
+        retv=${PIPESTATUS[0]}
+    else
+        ${exe_path}
+        retv=$?
+    fi
 
-    retv=$PIPESTATUS
+    # print exit code
     now=$(date +%T\ %N)
     if [ $retv -eq 0 ]; then
-        echo -e "\033[32m[$now] Program exited with code $retv\033[0m \n" | tee -a ${log_file}
+        echo -e "\033[32m[${now}] Program exited with code ${retv}\033[0m \n"
     else
-        echo -e "\033[31m[$now] Program exited with code $retv\033[0m \n" | tee -a ${log_file}
+        echo -e "\033[31m[${now}] Program exited with code ${retv}\033[0m \n"
+    fi
+    if [ $log_flag -eq 1 ]; then
+        echo -e "[$now] Program exited with code ${retv}" >>${log_file}
     fi
 done
 
 # rm the copy of the executable
 rm ${exe_path}
 
-echo -e "\033[32mAll done, you can check the log file at ${log_file}\033[0m"
+# print done message
+now=$(date +%T\ %N)
+if [ $log_flag -eq 1 ]; then
+    echo -e "\033[32m[$now] All done, you can check the log file at ${log_file}\033[0m"
+else
+    echo -e "\033[32m[$now] All done\033[0m"
+fi

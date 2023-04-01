@@ -1,7 +1,7 @@
 #! /bin/bash
 
 if [ -z "$1" ]; then
-    echo "Usage: libcset executable_path glibc_version"
+    echo "Usage: libcset <executable_path> <glibc_version>"
     echo "Available versions are:"
     ls /opt/libcbench/glibc
     echo "You can also set glibc_version to 0 to use the system's glibc."
