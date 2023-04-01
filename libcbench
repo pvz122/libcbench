@@ -15,14 +15,28 @@ fi
 cp ${1} ${1}.libcbench
 exe_path=$(realpath ${1}.libcbench)
 
+# create log file
+log_file=libcbench_$(date +%Y%m%d_%H%M%S).log
+touch ${log_file}
+
 # for each version, run `libcset executable_path version` and then run the executable
 for version in $available_versions; do
-    now=$(date +%T\ %N)
-    echo -e "\033[33m[$now] Running ${1} using glibc ${version}\033[0m"
     /opt/libcbench/libcset ${exe_path} ${version}
-    ${exe_path}
-    echo ""
+
+    now=$(date +%T\ %N)
+    echo -e "\033[33m[$now] Running ${1} using glibc ${version}\033[0m" | tee -a ${log_file}
+
+    ${exe_path} 2>&1 | tee -a ${log_file}
+
+    now=$(date +%T\ %N)
+    if [ $? -eq 0 ]; then
+        echo -e "\033[32m[$now] Program exited with code $?\033[0m \n" | tee -a ${log_file}
+    else
+        echo -e "\033[31m[$now] Program exited with code $?\033[0m \n" | tee -a ${log_file}
+    fi
 done
 
 # rm the copy of the executable
 rm ${exe_path}
+
+echo -e "\033[32mAll done, you can check the log file at ${log_file}\033[0m"
