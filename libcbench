@@ -28,11 +28,12 @@ for version in $available_versions; do
 
     ${exe_path} 2>&1 | tee -a ${log_file}
 
+    retv=$PIPESTATUS
     now=$(date +%T\ %N)
-    if [ $? -eq 0 ]; then
-        echo -e "\033[32m[$now] Program exited with code $?\033[0m \n" | tee -a ${log_file}
+    if [ $retv -eq 0 ]; then
+        echo -e "\033[32m[$now] Program exited with code $retv\033[0m \n" | tee -a ${log_file}
     else
-        echo -e "\033[31m[$now] Program exited with code $?\033[0m \n" | tee -a ${log_file}
+        echo -e "\033[31m[$now] Program exited with code $retv\033[0m \n" | tee -a ${log_file}
     fi
 done
 
