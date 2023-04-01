@@ -1,0 +1,28 @@
+#! /bin/bash
+
+# list /opt/libcbench/glibc
+available_versions=$(ls /opt/libcbench/glibc)
+
+# if no arguments are passed, print usage
+if [ -z "$1" ]; then
+    echo "Usage: libcbench executable_path"
+    echo "Available versions are:"
+    echo $available_versions
+    exit 0
+fi
+
+# make a copy of the executable
+cp ${1} ${1}.libcbench
+exe_path=$(realpath ${1}.libcbench)
+
+# for each version, run `libcset executable_path version` and then run the executable
+for version in $available_versions; do
+    now=$(date +%T\ %N)
+    echo -e "\033[33m[$now] Running ${1} using glibc ${version}\033[0m"
+    /opt/libcbench/libcset ${exe_path} ${version}
+    ${exe_path}
+    echo ""
+done
+
+# rm the copy of the executable
+rm ${exe_path}
