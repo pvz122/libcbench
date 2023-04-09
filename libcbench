@@ -9,6 +9,7 @@ Arguments:
     -h: print this help message
     --log: log the output of the executable
 "
+declare -A statistics=()
 
 # if no arguments are passed, print usage
 if [ -z "$1" ]; then
@@ -70,8 +71,10 @@ for version in $avai_vers; do
     # print exit code
     now=$(date +%T\ %N)
     if [ $retv -eq 0 ]; then
+        statistics[$version]="Y"
         echo -e "\033[32m[${now}] Program exited with code ${retv}\033[0m \n"
     else
+        statistics[$version]="N"
         echo -e "\033[31m[${now}] Program exited with code ${retv}\033[0m \n"
     fi
     if [ $log_flag -eq 1 ]; then
@@ -84,8 +87,22 @@ rm ${exe_path}
 
 # print done message
 now=$(date +%T\ %N)
+echo -e "\033[33m[$now] All done. \nThe results are below: (Version - Is Exited Normally)\033[0m"
 if [ $log_flag -eq 1 ]; then
-    echo -e "\033[32m[$now] All done, you can check the log file at ${log_file}\033[0m"
-else
-    echo -e "\033[32m[$now] All done\033[0m"
+    echo -e "[$now] Results:" >>${log_file}
+fi
+for version in $avai_vers; do
+    if [ ${statistics[$version]} == "Y" ]; then
+        echo -e "\033[32m${version}\tY\033[0m"
+    else
+        echo -e "\033[31m${version}\tN\033[0m"
+    fi
+    if [ $log_flag -eq 1 ]; then
+        echo -e "${version}\t${statistics[$version]}" >>${log_file}
+    fi
+done
+
+if [ $log_flag -eq 1 ]; then
+    now=$(date +%T\ %N)
+    echo -e "\033[33m[$now] Log saves to ${log_file}\033[0m"
 fi
