@@ -2,42 +2,62 @@
 
 avai_vers=$(ls /opt/libcbench/glibc)
 help_str="\
-Usage: libcbench [--log] <executable_path>
+Usage: libcbench [--log | --timeout=<time>] <executable_path>
        libcbench -l | -h
 Arguments:
     -l: list available glibc versions
     -h: print this help message
     --log: log the output of the executable
+    --timeout=<time>: set the timeout for each run (default: 1s), e.g. --timeout=5s
+                      if set to 0, execute without timeout
 "
 declare -A statistics=()
-
-# if no arguments are passed, print usage
-if [ -z "$1" ]; then
-    echo "${help_str}"
-    exit 0
-fi
-
-# if -l is passed, list available glibc versions
-if [ "$1" == "-l" ]; then
-    echo "Available versions are:"
-    echo ${avai_vers}
-    exit 0
-fi
-
-# if -h is passed, print usage
-if [ "$1" == "-h" ]; then
-    echo "${help_str}"
-    exit 0
-fi
-
-# if --log is passed, log the output of the executable
+timeout_val="1s"
 log_flag=0
-if [ "$1" == "--log" ]; then
-    shift
-    log_flag=1
-fi
+
+# parse arguments
+while getopts ":l-:h" opt; do
+    case $opt in
+    l)
+        echo "Available versions are:"
+        echo ${avai_vers}
+        exit 0
+        ;;
+    h)
+        echo "${help_str}"
+        exit 0
+        ;;
+    -)
+        case $OPTARG in
+        log)
+            log_flag=1
+            ;;
+        timeout=*)
+            timeout_val=$(echo $OPTARG | cut -d'=' -f2)
+            ;;
+        *)
+            echo -e "Invalid option: --$OPTARG \nTry 'libcbench -h' for more infomation." >&2
+            exit 1
+            ;;
+        esac
+        ;;
+    \?)
+        echo -e "Invalid option: -$OPTARG \nTry 'libcbench -h' for more infomation." >&2
+        exit 1
+        ;;
+    :)
+        echo -e "Option -$OPTARG requires an argument \nTry 'libcbench -h' for more infomation." >&2
+        exit 1
+        ;;
+    esac
+done
 
 # make a copy of the executable
+shift $((OPTIND - 1))
+if [ $# -ne 1 ]; then
+    echo -e "Require an executable path \nTry 'libcbench -h' for more infomation." >&2
+    exit 1
+fi
 exe_name=${1}
 cp ${exe_name} ${exe_name}.libcbench
 exe_path=$(realpath ${exe_name}.libcbench)
@@ -61,10 +81,10 @@ for version in $avai_vers; do
 
     # run the executable
     if [ $log_flag -eq 1 ]; then
-        ${exe_path} 2>&1 | tee -a ${log_file}
+        timeout ${timeout_val} ${exe_path} 2>&1 | tee -a ${log_file}
         retv=${PIPESTATUS[0]}
     else
-        ${exe_path}
+        timeout ${timeout_val} ${exe_path}
         retv=$?
     fi
 
@@ -73,6 +93,10 @@ for version in $avai_vers; do
     if [ $retv -eq 0 ]; then
         statistics[$version]="Y"
         echo -e "\033[32m[${now}] Program exited with code ${retv}\033[0m \n"
+    # return 124 if timeout
+    elif [ $retv -eq 124 ]; then
+        statistics[$version]="T"
+        echo -e "\033[31m[${now}] Program exited with code ${retv} (timeout)\033[0m \n"
     else
         statistics[$version]="N"
         echo -e "\033[31m[${now}] Program exited with code ${retv}\033[0m \n"
@@ -87,15 +111,19 @@ rm ${exe_path}
 
 # print done message
 now=$(date +%T\ %N)
-echo -e "\033[33m[$now] All done. \nThe results are below: (Version - Is Exited Normally)\033[0m"
+echo -e "\033[33m[$now] All done. \nThe results are below: (Y - success, N - fail, T - timeout)\033[0m"
 if [ $log_flag -eq 1 ]; then
     echo -e "[$now] Results:" >>${log_file}
 fi
 for version in $avai_vers; do
     if [ ${statistics[$version]} == "Y" ]; then
         echo -e "\033[32m${version}\tY\033[0m"
-    else
+    elif [ ${statistics[$version]} == "N" ]; then
         echo -e "\033[31m${version}\tN\033[0m"
+    elif [ ${statistics[$version]} == "T" ]; then
+        echo -e "\033[31m${version}\tT\033[0m"
+    else
+        echo -e "${version}\t${statistics[$version]}"
     fi
     if [ $log_flag -eq 1 ]; then
         echo -e "${version}\t${statistics[$version]}" >>${log_file}

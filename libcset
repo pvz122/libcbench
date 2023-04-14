@@ -1,6 +1,6 @@
 #! /bin/bash
 
-if [ -z "$1" ]; then
+if [ $# -ne 2 ]; then
     echo "Usage: libcset <executable_path> <glibc_version>"
     echo "Available versions are:"
     ls /opt/libcbench/glibc
