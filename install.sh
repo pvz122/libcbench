@@ -1,8 +1,8 @@
 #! /bin/bash
 
-# test if unzip is installed
-if ! [ -x "$(command -v unzip)" ]; then
-    echo "Error: unzip is not installed." >&2
+# test if tar is installed
+if ! [ -x "$(command -v tar)" ]; then
+    echo "Error: tar is not installed." >&2
     exit 1
 fi
 
@@ -23,8 +23,9 @@ echo "Installing libcbench..."
 # mkdir /opt/libcbench
 mkdir /opt/libcbench
 
-# unzip glibc.zip to /opt/libcbench/glibc, STDOUT is redirected to /dev/null
-unzip glibc.zip -d /opt/libcbench >/dev/null
+# untar glibc.tar.gz to /opt/libcbench/glibc
+mkdir /opt/libcbench/glibc
+tar -xzvf glibc.tar.gz -C /opt/libcbench/glibc
 
 # copy libcbench and libcset to /opt/libcbench/libcset
 cp libcset /opt/libcbench/libcset

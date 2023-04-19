@@ -15,5 +15,5 @@ else
         echo "Error: glibc version ${2} is not installed."
         exit 1
     fi
-    patchelf --set-interpreter /opt/libcbench/glibc/${2}/ld-linux-x86-64.so.2 --set-rpath /opt/libcbench/glibc/${2} ${1}
+    patchelf --set-interpreter /opt/libcbench/glibc/${2}/lib/ld-linux-x86-64.so.2 --set-rpath /opt/libcbench/glibc/${2}/lib ${1}
 fi

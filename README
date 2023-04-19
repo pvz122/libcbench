@@ -4,12 +4,14 @@ A tool to test your binary with every glibc version.
 
 ## Install
 
-Firstly, clone the repository and get `glibc.zip` from pvz122/glibc-compile repository.
+Firstly, clone the repository.
 
-Then make sure you have installed unzip and patchelf:
+Next, get `glibc.tar.gz` from [release page](https://github.com/pvz122/libcbench/releases) or [compile it yourself](https://github.com/pvz122/libccompile). Put it into the repository directory.
+
+Then make sure you have installed tar and patchelf:
 
 ```shell
-sudo apt-get install unzip patchelf
+sudo apt-get install tar patchelf
 ```
 
 Finally, run:
