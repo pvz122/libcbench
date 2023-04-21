@@ -70,7 +70,7 @@ fi
 
 # for each version, run `libcset executable_path version` and then run the executable
 for version in $avai_vers; do
-    /opt/libcbench/libcset ${exe_path} ${version}
+    /opt/libcbench/libcset "${exe_path}" ${version}
 
     # print start running message
     now=$(date +%T\ %N)
@@ -81,10 +81,10 @@ for version in $avai_vers; do
 
     # run the executable
     if [ $log_flag -eq 1 ]; then
-        timeout ${timeout_val} ${exe_path} 2>&1 | tee -a ${log_file}
+        timeout ${timeout_val} "${exe_path}" 2>&1 | tee -a ${log_file}
         retv=${PIPESTATUS[0]}
     else
-        timeout ${timeout_val} ${exe_path}
+        timeout ${timeout_val} "${exe_path}"
         retv=$?
     fi
 
@@ -107,7 +107,7 @@ for version in $avai_vers; do
 done
 
 # rm the copy of the executable
-rm ${exe_path}
+rm "${exe_path}"
 
 # print done message
 now=$(date +%T\ %N)

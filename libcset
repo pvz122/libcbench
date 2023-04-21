@@ -9,11 +9,11 @@ if [ $# -ne 2 ]; then
 fi
 
 if [ "$2" == "0" ]; then
-    patchelf --set-interpreter /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 --set-rpath /usr/lib/x86_64-linux-gnu ${1}
+    patchelf --set-interpreter /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 --set-rpath /usr/lib/x86_64-linux-gnu "${1}"
 else
     if [ ! -d "/opt/libcbench/glibc/${2}" ]; then
         echo "Error: glibc version ${2} is not installed."
         exit 1
     fi
-    patchelf --set-interpreter /opt/libcbench/glibc/${2}/lib/ld-linux-x86-64.so.2 --set-rpath /opt/libcbench/glibc/${2}/lib ${1}
+    patchelf --set-interpreter /opt/libcbench/glibc/${2}/lib/ld-linux-x86-64.so.2 --set-rpath /opt/libcbench/glibc/${2}/lib "${1}"
 fi
